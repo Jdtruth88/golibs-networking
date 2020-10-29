@@ -85,7 +85,7 @@ func (q Queue) GetMessageChannel() MessageChannel {
 	return messageChannel
 }
 
-func (q Queue) RunConsumerWithCancel(consumer Consumer, ctx context.Context) {
+func (q Queue) RunConsumerWithCancel(consumer Consumer, async bool, ctx context.Context) {
 	messageChannel := q.GetMessageChannel()
 	for {
 		select {
@@ -96,27 +96,14 @@ func (q Queue) RunConsumerWithCancel(consumer Consumer, ctx context.Context) {
 			if message.Body == nil {
 				continue
 			}
-			go consumer(message)
-		}
-	}
-}
-
-func (q Queue) RunSyncConsumerWithCancel(consumer Consumer, ctx context.Context) {
-	messageChannel := q.GetMessageChannel()
-	for {
-		select {
-		case <-ctx.Done():
-			log.Info("Consumer stopped")
-			return
-		case message := <-messageChannel:
-			if message.Body == nil {
-				continue
+			if async {
+				go consumer(message)
+			} else {
+				consumer(message)
 			}
-			consumer(message)
 		}
 	}
 }
-
 func RestoreConnectionWorker(url string, queue Queue, timeout time.Duration) {
 	log.Info("Run MQ RestoreConnectionWorker")
 	for {

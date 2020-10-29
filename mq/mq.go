@@ -30,16 +30,13 @@ func Init(url string, prefetchChannelCount int) (err error) {
 	return err
 }
 
-func Close() {
+func Close() error {
 	err := amqpChan.Close()
 	if err != nil {
 		log.Error(err)
 	}
 
-	err = conn.Close()
-	if err != nil {
-		log.Error(err)
-	}
+	return conn.Close()
 }
 
 func (mc MessageChannel) GetMessage() amqp.Delivery {
